@@ -1,182 +1,158 @@
-# ZenoRide - Ride Sharing Application
+# 🚖 ZenoDrive
 
-A full-stack ride-sharing application built with modern web technologies, featuring real-time location tracking, driver-passenger matching, and live ride updates.
+**Real-time cab booking platform with On-Spot Booking.** Riders can instantly book an idle cab that's right next to them, instead of waiting for an algorithm to assign a driver.
 
-## 📋 Project Structure
+Built on an **event-driven, horizontally scalable** architecture: Apache Kafka for event streaming, Redis Pub/Sub for cross-instance WebSocket routing, and Socket.IO for live updates.
 
-```
-ZenoRideV2/
-├── Backend/                 # Node.js/Express server
-├── Frontend/               # React + Vite frontend
-└── socket-service/         # WebSocket server for real-time features
-```
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js (v14 or higher)
-- npm or yarn
-- MongoDB instance (for Backend)
-- Redis instance (for Socket Service)
-- Kafka (for event streaming)
-
-### Installation
-
-#### 1. Backend Setup
-```bash
-cd Backend
-npm install
-# Configure .env file with your database and service credentials
-node server.js
-```
-
-#### 2. Frontend Setup
-```bash
-cd Frontend
-npm install
-# Configure .env file with API endpoints
-npm run dev
-```
-
-#### 3. Socket Service Setup
-```bash
-cd socket-service
-npm install
-# Configure .env file with Redis, Kafka, and database credentials
-node index.js
-```
-
-## 🏗️ Architecture Overview
-
-### Backend
-Node.js and Express-based REST API server handling:
-- User authentication and authorization
-- Captain (driver) management
-- Ride creation and management
-- Maps integration for location services
-- Kafka message producer for event streaming
-
-**Key Components:**
-- `controllers/` - Request handlers for different routes
-- `models/` - Database schemas and models
-- `services/` - Business logic layer
-- `routes/` - API endpoints
-- `middlewares/` - Authentication and other middleware
-- `kafka/` - Event publishing
-- `db/` - Database configuration
-
-### Frontend
-React application with Vite build tool for:
-- User and captain authentication
-- Real-time ride booking interface
-- Live location tracking
-- Ride confirmation and management
-
-**Key Components:**
-- `components/` - Reusable UI components
-- `pages/` - Page components for different views
-- `context/` - React context for state management (User, Captain, Socket)
-- `assets/` - Static assets and images
-
-### Socket Service
-Real-time communication service featuring:
-- Redis for caching and pub/sub
-- Kafka consumer for event consumption
-- WebSocket server for live updates
-- Captain and user socket models for connection management
-
-**Key Components:**
-- `socket.js` - WebSocket server setup
-- `redis.js` - Redis connection and operations
-- `kafka/` - Kafka consumer for events
-- `models/` - Socket models for tracking connections
-
-## 🔧 Environment Configuration
-
-Create `.env` files in each folder with required variables:
-
-**Backend/.env**
-- Database connection strings
-- JWT secrets
-- Maps API keys
-- Kafka broker URLs
-
-**Frontend/.env**
-- Backend API URL
-- Socket service URL
-
-**socket-service/.env**
-- Redis connection URL
-- Kafka broker URLs
-- Database connection strings
-
-## 🎯 Key Features
-
-- **User Authentication**: Secure login/signup for users and captains
-- **Ride Booking**: Real-time ride request and acceptance
-- **Live Tracking**: Real-time location updates during rides
-- **Driver Matching**: Intelligent driver assignment
-- **Ride Management**: Track active rides and ride history
-- **Location Services**: Integration with maps API
-- **Event Streaming**: Kafka-based event processing for real-time features
-
-## 📡 Technology Stack
-
-**Backend:**
-- Node.js
-- Express.js
-- MongoDB
-- Kafka
-- JWT Authentication
-
-**Frontend:**
-- React
-- Vite
-- Tailwind CSS
-- Socket.io (for real-time updates)
-
-**Socket Service:**
-- Node.js
-- Redis
-- Kafka
-- WebSocket
-
-## 🔄 Deployment
-
-Each service includes a `vercel.json` configuration for deployment on Vercel. The `docker-compose.yml` in socket-service can be used for containerized deployment.
-
-## 📝 API Endpoints
-
-### Users
-- `POST /api/users/register` - Register new user
-- `POST /api/users/login` - User login
-- `POST /api/users/logout` - User logout
-
-### Captains
-- `POST /api/captains/register` - Register new captain
-- `POST /api/captains/login` - Captain login
-- `POST /api/captains/logout` - Captain logout
-
-### Rides
-- `POST /api/rides/request` - Request a ride
-- `GET /api/rides/:id` - Get ride details
-- `POST /api/rides/:id/confirm` - Confirm ride
-- `POST /api/rides/:id/finish` - Finish ride
-
-### Maps
-- `GET /api/maps/coordinates` - Get location coordinates
-- `GET /api/maps/distance` - Calculate distance between locations
-
-## 🤝 Contributing
-
-1. Create a feature branch
-2. Make your changes
-3. Test thoroughly
-4. Submit a pull request
-
-## 📄 License
-
-This project is private and proprietary.
+<!-- Add a live link once deployed: **Live Demo:** https://your-app.vercel.app -->
 
 ---
 
-**Last Updated:** February 2026
+## ✨ Key Features
+
+- **⚡ On-Spot Booking**: See idle cabs nearby and book one instantly, which cuts passenger wait time.
+- **📍 Live Location Tracking**: Real-time driver location updates through Socket.IO.
+- **🔄 Real-time Ride Lifecycle**: Request, accept, confirm and finish, with every step pushed live to both rider and captain.
+- **🗺️ Location-based Matching**: Google Maps API for geocoding, distance and nearby-captain lookup.
+- **🔐 Authentication**: JWT-based login and signup for riders and captains, with protected routes.
+- **📈 Horizontally Scalable Sockets**: Redis Pub/Sub routes events to the right socket instance, so the WebSocket layer can scale out.
+
+---
+
+## 🏗️ Architecture
+
+```mermaid
+flowchart LR
+    U[Rider App<br/>React + Vite] -->|REST| B[Backend API<br/>Express]
+    C[Captain App<br/>React + Vite] -->|REST| B
+    B --> M[(MongoDB)]
+    B -->|publish ride events| K[[Apache Kafka]]
+    K -->|consume| S1[Socket Service<br/>instance 1]
+    K -->|consume| S2[Socket Service<br/>instance N]
+    S1 <-->|Pub/Sub| R[(Redis)]
+    S2 <-->|Pub/Sub| R
+    S1 <-->|Socket.IO| U
+    S2 <-->|Socket.IO| C
+    B --> G[Google Maps API]
+```
+
+**How it works:**
+1. The Backend handles REST requests (auth, rides, maps) and publishes ride events to **Kafka**.
+2. The **Socket Service** consumes those events and delivers them to connected clients over **Socket.IO**.
+3. **Redis Pub/Sub** makes sure an event reaches the right user even when that user is connected to a different socket instance.
+
+This split decouples the request/response path from real-time delivery, so each service scales independently.
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technologies |
+|---|---|
+| Frontend | React, Vite, Tailwind CSS, Socket.IO Client, Context API |
+| Backend | Node.js, Express.js, MongoDB, JWT, Kafka (producer) |
+| Real-time | Socket.IO, Redis Pub/Sub, Kafka (consumer) |
+| APIs | Google Maps API |
+| DevOps | Docker Compose, Vercel |
+
+---
+
+## 📁 Project Structure
+
+```
+ZenoDrive/
+├── Backend/          # REST API: auth, captains, rides, maps, Kafka producer
+├── Frontend/         # React + Vite client for riders and captains
+└── socket-service/   # Socket.IO server, Kafka consumer, Redis Pub/Sub
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+
+- MongoDB
+- Redis
+- Apache Kafka
+- Google Maps API key
+
+### 1. Clone
+```bash
+git clone https://github.com/paradise2580/ZenoDrive.git
+cd ZenoDrive
+```
+
+### 2. Start Kafka and Redis
+```bash
+cd socket-service
+docker compose up -d
+```
+
+### 3. Backend
+```bash
+cd Backend
+npm install
+node server.js
+```
+
+### 4. Socket Service
+```bash
+cd socket-service
+npm install
+node index.js
+```
+
+### 5. Frontend
+```bash
+cd Frontend
+npm install
+npm run dev
+```
+
+---
+
+## 🔧 Environment Variables
+
+Create a `.env` file in each service:
+
+| Service | Required |
+|---|---|
+| `Backend/` | MongoDB URI, JWT secret, Google Maps API key, Kafka broker URL |
+| `socket-service/` | Redis URL, Kafka broker URL, MongoDB URI |
+| `Frontend/` | Backend API URL, Socket service URL |
+
+---
+
+## 📡 API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/users/register` | Register rider |
+| POST | `/api/users/login` | Rider login |
+| POST | `/api/users/logout` | Rider logout |
+| POST | `/api/captains/register` | Register captain |
+| POST | `/api/captains/login` | Captain login |
+| POST | `/api/captains/logout` | Captain logout |
+| POST | `/api/rides/request` | Request a ride |
+| GET | `/api/rides/:id` | Get ride details |
+| POST | `/api/rides/:id/confirm` | Confirm ride |
+| POST | `/api/rides/:id/finish` | Finish ride |
+| GET | `/api/maps/coordinates` | Geocode an address |
+| GET | `/api/maps/distance` | Distance between two locations |
+
+---
+
+## 📸 Screenshots
+
+<!-- Add screenshots to a /screenshots folder and uncomment:
+| Rider – Booking | Captain – Ride Request | Live Tracking |
+|---|---|---|
+| ![](screenshots/booking.png) | ![](screenshots/captain.png) | ![](screenshots/tracking.png) |
+-->
+
+---
+
+## 👩‍💻 Author
+
+**Anshivya Nagpal**: [GitHub](https://github.com/paradise2580) · [LinkedIn](https://www.linkedin.com/in/anshivya-nagpal-18a75b315)
