@@ -4,7 +4,7 @@
 
 Built on an **event-driven, horizontally scalable** architecture: Apache Kafka for event streaming, Redis Pub/Sub for cross-instance WebSocket routing, and Socket.IO for live updates.
 
-<!-- Add a live link once deployed: **Live Demo:** https://your-app.vercel.app -->
+**🌐 Live Demo:** [zenoride.in](https://www.zenoride.in/)
 
 ---
 
